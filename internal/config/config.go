@@ -15,15 +15,23 @@ type Config struct {
 	Current_user_name string `json:"current_user_name"`
 }
 
-func Read() (Config, error) {
+func getConfigFilePath() (string, error) {
 	home_dir, err := os.UserHomeDir()
 	if err != nil {
-		return Config{}, errors.New("Cannot get user's home directory string.")
+		return "", errors.New("Cannot get user's home directory string.")
 	}
 	path := filepath.Join(home_dir, configFileName)
+	return path, nil
+}
+
+func Read() (Config, error) {
+	path, err := getConfigFilePath()
+	if err != nil {
+		return Config{}, err
+	}
 	data, err := os.Open(path)
 	if err != nil {
-		return Config{}, fmt.Errorf("Could not read file.")
+		return Config{}, fmt.Errorf("Could not open file.")
 	}
 	defer data.Close()
 	var config Config
@@ -32,4 +40,25 @@ func Read() (Config, error) {
 		return Config{}, fmt.Errorf("Could not decode JSON data: ")
 	}
 	return config, nil
+}
+
+func (c Config) SetUser(user string) {
+	c.Current_user_name = user
+	write(c)
+}
+
+func write(cfg Config) error {
+	path, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
+	data, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("Could not open file.")
+	}
+	defer data.Close()
+	if err := json.NewEncoder(data).Encode(cfg); err != nil {
+		return fmt.Errorf("Could not write JSON data to config file.")
+	}
+	return nil
 }
