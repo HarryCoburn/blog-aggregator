@@ -52,9 +52,9 @@ func write(cfg Config) error {
 	if err != nil {
 		return err
 	}
-	data, err := os.Open(path)
+	data, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("Could not open file.")
+		return fmt.Errorf("Could not open file: %w", err)
 	}
 	defer data.Close()
 	if err := json.NewEncoder(data).Encode(cfg); err != nil {
