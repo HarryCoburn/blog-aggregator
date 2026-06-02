@@ -6,6 +6,10 @@ import (
 	"github.com/HarryCoburn/blog-aggregator/internal/config"
 )
 
+type state struct {
+	state *config.Config
+}
+
 func main() {
 	file, err := config.Read()
 	if err != nil {
