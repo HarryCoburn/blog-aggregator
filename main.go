@@ -1,27 +1,37 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
 	"github.com/HarryCoburn/blog-aggregator/internal/config"
+	"github.com/HarryCoburn/blog-aggregator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 type state struct {
-	state *config.Config
+	db  *database.Queries
+	cfg *config.Config
 }
 
 func main() {
 	var appState state
 	var commands commands
 
-	// Initialize state
+	// Initialize config
 	file, err := config.Read()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	appState.state = &file
+	appState.cfg = &file
+
+	// Initialize database
+	db, err := sql.Open("postgres", appState.cfg.Db_url)
+	dbQueries := database.New(db)
+	appState.db = dbQueries
 
 	// Initialize command map
 	commands.commands = make(map[string]func(*state, command) error)

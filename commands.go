@@ -31,7 +31,7 @@ func handlerLogin(s *state, cmd command) error {
 	if cmd.args == nil {
 		return fmt.Errorf("Login command requires a username.")
 	}
-	s.state.SetUser(cmd.args[0])
+	s.cfg.SetUser(cmd.args[0])
 
 	fmt.Printf("Username set to %s\n", cmd.args[0])
 	return nil
