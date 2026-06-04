@@ -38,6 +38,7 @@ func main() {
 
 	// Register commands
 	commands.register("login", handlerLogin)
+	commands.register("register", handlerRegister)
 
 	// Check arguments
 	args := os.Args
