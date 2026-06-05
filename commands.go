@@ -100,6 +100,10 @@ func handlerGetUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	fmt.Println(feed)
 	return nil
 }
