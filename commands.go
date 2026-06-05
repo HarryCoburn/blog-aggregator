@@ -72,3 +72,34 @@ func handlerRegister(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerReset(s *state, cmd command) error {
+	fmt.Println("Resetting users...")
+	err := s.db.Reset(context.Background())
+	if err != nil {
+		return fmt.Errorf("Could not reset user table. Reason: %v", err)
+	}
+	fmt.Println("Reset successful.")
+	return nil
+}
+
+func handlerGetUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("User table likely empty. Error: %v", err)
+	}
+	currentUser := s.cfg.Current_user_name
+	for _, user := range users {
+		if user == currentUser {
+			fmt.Printf("* %s (current)\n", user)
+		} else {
+			fmt.Printf("* %s\n", user)
+		}
+	}
+	return nil
+}
+
+func handlerAgg(s *state, cmd command) error {
+	fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	return nil
+}
