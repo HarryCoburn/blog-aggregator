@@ -107,3 +107,48 @@ func handlerAgg(s *state, cmd command) error {
 	fmt.Println(feed)
 	return nil
 }
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) != 2 {
+		return fmt.Errorf("AddFeed requires a name and a URL in quotes.")
+	}
+
+	var params database.CreateFeedParams
+	params.ID = uuid.New()
+	params.CreatedAt = time.Now()
+	params.UpdatedAt = params.CreatedAt
+	params.Name = cmd.args[0]
+	params.Url = cmd.args[1]
+
+	currentUser, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+	if err != nil {
+		return fmt.Errorf("Could not get user from the database with addfeed: %v", err)
+	}
+	params.UserID = currentUser.ID
+
+	feed, err := s.db.CreateFeed(context.Background(), params)
+	if err != nil {
+		return fmt.Errorf("Could not add feed: %v", err)
+	}
+	fmt.Println(feed)
+	return nil
+}
+
+func handlerFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("Feeds table likely empty. Error: %v", err)
+	}
+
+	for _, feed := range feeds {
+		fmt.Printf("Name: %s\n", feed.Name)
+		fmt.Printf("URL: %s\n", feed.Url)
+		userName, err := s.db.GetUserFromId(context.Background(), feed.UserID)
+		if err != nil {
+			return fmt.Errorf("Could not find userID of feed creator. Error: %v", err)
+		}
+		fmt.Printf("Created by: %s\n\n", userName)
+	}
+
+	return nil
+}
