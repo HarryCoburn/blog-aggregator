@@ -108,29 +108,29 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) != 2 {
 		return fmt.Errorf("AddFeed requires a name and a URL in quotes.")
 	}
-
 	var params database.CreateFeedParams
 	params.ID = uuid.New()
 	params.CreatedAt = time.Now()
 	params.UpdatedAt = params.CreatedAt
 	params.Name = cmd.args[0]
 	params.Url = cmd.args[1]
-
-	currentUser, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
-	if err != nil {
-		return fmt.Errorf("Could not get user from the database with addfeed: %v", err)
-	}
-	params.UserID = currentUser.ID
+	params.UserID = user.ID
 
 	feed, err := s.db.CreateFeed(context.Background(), params)
 	if err != nil {
 		return fmt.Errorf("Could not add feed: %v", err)
 	}
 	fmt.Println(feed)
+
+	newCmd := command{}
+	newCmd.name = "follow"
+	newCmd.args = []string{cmd.args[1]}
+	handlerFollow(s, newCmd)
+
 	return nil
 }
 
@@ -153,16 +153,12 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	url := cmd.args[0]
 	var params database.CreateFeedFollowParams
 	params.ID = uuid.New()
 	params.CreatedAt = time.Now()
 	params.UpdatedAt = params.CreatedAt
-	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
-	if err != nil {
-		return fmt.Errorf("current user name not found in users table. %v", err)
-	}
 	params.UserID = user.ID
 	feed, err := s.db.GetFeedFromURL(context.Background(), url)
 	if err != nil {
@@ -181,8 +177,8 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	followedFeeds, err := s.db.GetFeedFollowsForUser(context.Background(), s.cfg.Current_user_name)
+func handlerFollowing(s *state, cmd command, user database.User) error {
+	followedFeeds, err := s.db.GetFeedFollowsForUser(context.Background(), user.Name)
 	if err != nil {
 		return fmt.Errorf("Error in handlerFollowing. %v", err)
 	}
@@ -190,7 +186,7 @@ func handlerFollowing(s *state, cmd command) error {
 		return fmt.Errorf("Given user is following no feeds")
 	}
 	for _, feed := range followedFeeds {
-		fmt.Printf(feed)
+		fmt.Println(feed)
 	}
 	return nil
 }
