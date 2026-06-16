@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/HarryCoburn/blog-aggregator/internal/database"
@@ -229,7 +230,52 @@ func scrapeFeeds(s *state) error {
 		return err
 	}
 	for _, item := range feed.Channel.Item {
-		fmt.Println(item.Title)
+		// Build post params
+		var params database.CreatePostParams
+		params.ID = uuid.New()
+		params.CreatedAt = time.Now()
+		params.UpdatedAt = params.CreatedAt
+		params.Title = item.Title
+		params.Url = item.Link
+		params.Description = sql.NullString{String: item.Description, Valid: true}
+		pubTime, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			pubTime, err = time.Parse(time.RFC1123, item.PubDate)
+			if err != nil {
+				fmt.Printf("Got an inconsistent date %s: %v\n", item.PubDate, err)
+			}
+		}
+
+		params.PublishedAt = sql.NullTime{Time: pubTime, Valid: true}
+		params.FeedID = nextFeed.ID
+		// Create post
+		s.db.CreatePost(context.Background(), params)
+	}
+	return nil
+}
+
+func handlerBrowse(s *state, cmd command) error {
+	limit := 2
+	if len(cmd.args) > 0 {
+		var err error
+		limit, err = strconv.Atoi(cmd.args[0])
+		if err != nil {
+			return fmt.Errorf("invalid limit argument: %v", err)
+		}
+	}
+	var params database.GetPostsForUserParams
+	params.Name = s.cfg.Current_user_name
+	params.Limit = int32(limit)
+	posts, err := s.db.GetPostsForUser(context.Background(), params)
+	if err != nil {
+		return err
+	}
+	for _, post := range posts {
+		fmt.Println()
+		fmt.Printf("%s\n", post.Title)
+		fmt.Printf("%s\n", post.Url)
+		fmt.Printf("%s\n", post.Description.String)
+		fmt.Println("=============")
 	}
 	return nil
 }

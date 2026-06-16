@@ -53,20 +53,50 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) error {
 }
 
 const getPostsForUser = `-- name: GetPostsForUser :many
-SELECT id, created_at, updated_at, title, url, description, published_at, feed_id FROM posts
-ORDER BY created_at DESC
-LIMIT $1
+SELECT posts.id, posts.created_at, posts.updated_at, title, url, description, published_at, posts.feed_id, feed_follows.id, feed_follows.created_at, feed_follows.updated_at, user_id, feed_follows.feed_id, users.id, users.created_at, users.updated_at, name FROM posts
+INNER JOIN feed_follows
+ON posts.feed_id = feed_follows.feed_id
+INNER JOIN users
+ON feed_follows.user_id = users.id
+WHERE users.name = $1
+ORDER BY posts.published_at DESC
+LIMIT $2
 `
 
-func (q *Queries) GetPostsForUser(ctx context.Context, limit int32) ([]Post, error) {
-	rows, err := q.db.QueryContext(ctx, getPostsForUser, limit)
+type GetPostsForUserParams struct {
+	Name  string
+	Limit int32
+}
+
+type GetPostsForUserRow struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Url         string
+	Description sql.NullString
+	PublishedAt sql.NullTime
+	FeedID      uuid.UUID
+	ID_2        uuid.UUID
+	CreatedAt_2 time.Time
+	UpdatedAt_2 time.Time
+	UserID      uuid.UUID
+	FeedID_2    uuid.UUID
+	ID_3        uuid.UUID
+	CreatedAt_3 time.Time
+	UpdatedAt_3 time.Time
+	Name        string
+}
+
+func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams) ([]GetPostsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForUser, arg.Name, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Post
+	var items []GetPostsForUserRow
 	for rows.Next() {
-		var i Post
+		var i GetPostsForUserRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatedAt,
@@ -76,6 +106,15 @@ func (q *Queries) GetPostsForUser(ctx context.Context, limit int32) ([]Post, err
 			&i.Description,
 			&i.PublishedAt,
 			&i.FeedID,
+			&i.ID_2,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+			&i.UserID,
+			&i.FeedID_2,
+			&i.ID_3,
+			&i.CreatedAt_3,
+			&i.UpdatedAt_3,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
