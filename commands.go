@@ -113,6 +113,7 @@ func handlerAgg(s *state, cmd command) error {
 	ticker := time.NewTicker(duration)
 	for ; ; <-ticker.C {
 		scrapeFeeds(s)
+		fmt.Println("Queried feeds")
 	}
 	return nil
 }
