@@ -25,20 +25,20 @@ You can download the repo and use ```go run . <command>```. If you want to insta
 
 Use these commands by typing ```gator command```
 
-reset: Resets the database to a clean start.
+- reset: Resets the database to a clean start.
 
 #### User Commands
-register <user>: Registers a username. It will automatically set the current user to what you register. Users are tied to a set of feeds.
-login <user>: Changes the current username to <user>.
-users: Lists the users in the database.
+- register <user>: Registers a username. It will automatically set the current user to what you register. Users are tied to a set of feeds.
+- login <user>: Changes the current username to <user>.
+- users: Lists the users in the database.
 
 #### Feed Commands
-feeds: Lists the feeds in the database across all users.
-follow <url>: Follow an RSS feed at the given URL.
-following: Lists the feeds the current user is following.
-unfollow <url>: Unfollows an RSS feed at the given URL.
-agg <time>: Queries the feeds your following for a <time> duration. e.g. 1m for every minute. At this time, this must be run, then then canceled with Ctrl+C before you can browse the posts. You'll get output in your console every time the feed is queried. TODO: make this a service in the background.
-browse <num>: Browse the latest posts you have downloaded. Default is two.
+- feeds: Lists the feeds in the database across all users.
+- follow <url>: Follow an RSS feed at the given URL.
+- following: Lists the feeds the current user is following.
+- unfollow <url>: Unfollows an RSS feed at the given URL.
+- agg <time>: Queries the feeds your following for a <time> duration. e.g. 1m for every minute. At this time, this must be run, then then canceled with Ctrl+C before you can browse the posts. You'll get output in your console every time the feed is queried. TODO: make this a service in the background.
+- browse <num>: Browse the latest posts you have downloaded. Default is two.
 
 
 ## TODO
