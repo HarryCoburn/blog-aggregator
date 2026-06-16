@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -100,11 +101,18 @@ func handlerGetUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		return err
+	if len(cmd.args) != 1 {
+		return fmt.Errorf("Include a time duration string when using agg (e.g. 1m).")
 	}
-	fmt.Println(feed)
+	fmt.Printf("Collecting feeds every %s\n", cmd.args[0])
+	duration, err := time.ParseDuration(cmd.args[0])
+	if err != nil {
+		return fmt.Errorf("Given time duration is in an incorrect format: %v", err)
+	}
+	ticker := time.NewTicker(duration)
+	for ; ; <-ticker.C {
+		scrapeFeeds(s)
+	}
 	return nil
 }
 
@@ -203,6 +211,25 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 	err = s.db.DeleteFeedFollow(context.Background(), params)
 	if err != nil {
 		return fmt.Errorf("Could not unfollow feed: %v", err)
+	}
+	return nil
+}
+
+func scrapeFeeds(s *state) error {
+	nextFeed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return err
+	}
+	var params database.MarkFeedFetchedParams
+	params.ID = nextFeed.ID
+	params.LastFetchedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	s.db.MarkFeedFetched(context.Background(), params)
+	feed, err := fetchFeed(context.Background(), nextFeed.Url)
+	if err != nil {
+		return err
+	}
+	for _, item := range feed.Channel.Item {
+		fmt.Println(item.Title)
 	}
 	return nil
 }
