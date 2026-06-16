@@ -19,7 +19,7 @@ Example:
 
 ## Installation
 
-You can download the repo and use ```go run .```. If you want to install it, use ```go install``` and you can run the program using the command ```gator```.
+You can download the repo and use ```go run . <command>```. If you want to install it, use ```go install``` and you can run the program using the command ```gator <command>```.
 
 ## Commands
 
