@@ -129,7 +129,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 	newCmd := command{}
 	newCmd.name = "follow"
 	newCmd.args = []string{cmd.args[1]}
-	handlerFollow(s, newCmd)
+	handlerFollow(s, newCmd, user)
 
 	return nil
 }
